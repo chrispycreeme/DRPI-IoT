@@ -1,0 +1,11 @@
+section.map {
+    margin-top: 50px;
+}
+
+img.map {
+    width: 75%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
