@@ -8,15 +8,17 @@
     <link rel="stylesheet" href="/DRPI-IoT-main/styles/style.css">
     <link rel="stylesheet" href="/DRPI-IoT-main/fonts/fonts-import.css">
     <link rel="stylesheet" href="/DRPI-IoT-main/styles/bisakol.css">
+
 </head>
 
 <body>
+
     <!-- Navigation Section -->
     <section class="topnav">
         <div class="container">
             <div class="logo">
                 <h1>DRPI - IoT</h1>
-                <p>Disaster Resilience and Protection Initatiave</p>
+                <p>Disaster Resilience and Protection Initiative</p>
                 <p>Based on <span style="color: #1D4EFB; font-weight: 700;">Internet of Things</span></p>
             </div>
             <div class="menu">
@@ -28,12 +30,18 @@
             </div>
         </div>
     </section>
-    <section class="map">
-        <img src="/DRPI-IoT-main/imagesvg/bisakol.svg" alt="mapa ng impyerno" srcset="" usemap="#bisakol" class="map">
-        <map name="bisakol">
-            <area alt="ABC" title="ABC" href="#" coords="109,18,0" shape="circle">
-        </map>
+
+    <section class="map-container">
+        <div class="map-main">
+            <div class="buttons-container">
+                <button class="zoom-button" id="zoomIn-button">+</button>
+                <button class="zoom-button" id="zoomOut-button">-</button>
+            </div>
+            <img src="/DRPI-IoT-main/imagesvg/bisakol.svg" alt="map of Bicol" srcset="" usemap="#Bicol" class="map">
+        </div>
     </section>
+
+    <script src="/DRPI-IoT-main/Js/map.js"></script>
 </body>
 
 </html>
