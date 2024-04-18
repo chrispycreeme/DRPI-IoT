@@ -3,7 +3,7 @@
 #include <SoftwareSerial.h>
 
 Adafruit_BMP085 bmp;
-SoftwareSerial BLEmod(12, 13);
+SoftwareSerial BLEmod(13, 12);
 int rainPin = A0;
 int moistureSensorPin = A1;
 int vibrationSensorPin = 7;
@@ -13,6 +13,8 @@ int lightRain = 850;
 int mediumRain = 600;
 int heavyRain = 400;
 
+int rainStatus = 0;
+int landslideError = 0;
 int rainLevels[4] = { 0 };  // Array to store frequency of each rain level
 unsigned long startTime;
 
@@ -36,6 +38,9 @@ long vibration() {
 }
 
 void loop() {
+  float temperatureRecord = bmp.readTemperature();
+  float pressureRecord = bmp.readPressure();
+
   unsigned long startMillis = millis();  // Record start time for loop iteration
   // Record start time for BMP085 sensor
 
@@ -63,13 +68,19 @@ void loop() {
   Serial.print(moisturePercentage);
   Serial.println("%");
 
-  if (moisturePercentage >= 25 || measurement >= 400) {  //Level 1 Error
-    Serial.println("Soil is wet and possible movent of soil detected, soil may be softened.");
-  } else if ((moisturePercentage >= 50 && moisturePercentage <= 70) && measurement == 700) {  // Level 2 Error
+  if (moisturePercentage >= 25 && measurement <= 400) {  //Level 1 Error
+    Serial.println("Soil is wet and possible movement of soil detected, soil may be softened.");
+    landslideError = 1;
+  } else if ((moisturePercentage >= 50 && moisturePercentage < 70) && (measurement > 400)) {  // Level 2 Error
     Serial.println("Slight movements on soil detected, soil is too wet. Possible Landslide might occur.");
-  } else if (moisturePercentage >= 70 && measurement >= 700) {  // Level 3
-    Serial.println("Strong Movements on the Soil has been detected, Landslide might've occured.");
+    landslideError = 2;
+  } else if (moisturePercentage >= 70 && measurement > 700) {  // Level 3 Error
+    Serial.println("Strong Movements on the Soil has been detected, Landslide might've occurred.");
+    landslideError = 3;
+  } else {
+    landslideError = 0;  // No error detected
   }
+
 
   //Rain Sensor Classification
 
@@ -82,20 +93,22 @@ void loop() {
   if (sensorValue >= noRain) {
     Serial.println("No Rain Detected");
     rainLevels[0]++;
+    rainStatus = 1;
   } else if (sensorValue <= noRain && sensorValue >= lightRain) {
     Serial.println("Light Rain Detected");
     rainLevels[1]++;
+    rainStatus = 2;
   } else if (sensorValue <= lightRain && sensorValue >= mediumRain) {
     Serial.println("Medium Rain Detected");
     rainLevels[2]++;
+    rainStatus = 3;
   } else if (sensorValue <= mediumRain || sensorValue <= heavyRain) {
     Serial.println("Heavy Rain Detected");
     rainLevels[3]++;
+    rainStatus = 4;
   }
 
-  //Rain Sensor Most Frequent Classification (10 seconds)
-
-  unsigned long responseTime = millis() - startMillis;  // Calculate total response time for the loop iteration
+  unsigned long responseTime = millis() - startMillis;
   Serial.print("Moisture Sensor Response Time: ");
   Serial.print(moistureResponseTime);
   Serial.println(" ms");
@@ -115,6 +128,14 @@ void loop() {
   Serial.print("Total Response Time: ");
   Serial.print(responseTime);
   Serial.println(" ms");
+
+  BLEmod.print(rainStatus);
+  BLEmod.print(",");
+  BLEmod.print(landslideError);
+  BLEmod.print(",");
+  BLEmod.print(temperatureRecord);
+  BLEmod.print(",");
+  BLEmod.println(sensorValue);
 
   delay(2000);
 }
