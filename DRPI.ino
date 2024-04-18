@@ -1,6 +1,9 @@
-
+#include "ArduinoGraphics.h"
+#include "Arduino_LED_Matrix.h"
 #include <Adafruit_BMP085.h>
 #include <SoftwareSerial.h>
+
+ArduinoLEDMatrix matrix;
 
 Adafruit_BMP085 bmp;
 SoftwareSerial BLEmod(13, 12);
@@ -30,7 +33,22 @@ void setup() {
     Serial.println("Could not find a valid BMP085 sensor, check wiring!");
     while (1) {}
   }
+  matrix.begin();
+
+  matrix.beginDraw();
+
+  matrix.stroke(0xFFFFFFFF);
+  matrix.textScrollSpeed(70);
+
+  const char text[] = " Hi!  ^0^ ";
+  matrix.textFont(Font_4x6);
+  matrix.beginText(0, 1, 0xFFFFFF);
+  matrix.println(text);
+  matrix.endText(SCROLL_LEFT);
+
+  matrix.endDraw();
 }
+
 
 long vibration() {
   long measurement = pulseIn(vibrationSensorPin, HIGH);
@@ -38,6 +56,8 @@ long vibration() {
 }
 
 void loop() {
+
+
   float temperatureRecord = bmp.readTemperature();
   float pressureRecord = bmp.readPressure();
 
@@ -136,7 +156,7 @@ void loop() {
   BLEmod.print(temperatureRecord);
   BLEmod.print(",");
   BLEmod.println(sensorValue);
-
+  LCD();
   delay(2000);
 }
 
@@ -178,4 +198,20 @@ void tempPre() {
   Serial.print("Pressure = ");
   Serial.print(bmp.readPressure());
   Serial.println(" Pa");
+}
+
+void LCD() {
+  matrix.beginDraw();
+
+  matrix.stroke(0xFFFFFFFF);
+  matrix.textScrollSpeed(50);
+
+  // add the text
+  const char text[] = "    DRPI-IoT ";
+  matrix.textFont(Font_5x7);
+  matrix.beginText(0, 1, 0xFFFFFF);
+  matrix.println(text);
+  matrix.endText(SCROLL_LEFT);
+
+  matrix.endDraw();
 }
