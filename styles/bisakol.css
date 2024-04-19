@@ -1,19 +1,14 @@
 .map-container {
     position: relative;
     margin-top: 50px;
-    width: 75%;
+    width: 60%;
     margin-left: auto;
     margin-right: auto;
     object-fit: fill;
     object-position: center;
     overflow: scroll;
     height: 550px;
-}
-
-.map {
-    text-align: center;
-    margin-right: auto;
-    margin-left: auto;
+    border: 1px solid #3e5cc7;
 }
 
 .buttons-container {
@@ -21,6 +16,14 @@
     top: 10px;
     right: 10px;
     margin: 0;
+    z-index: 9999;
+}
+
+.map {
+    height: 100%; /* Make sure the image fills the container horizontally */
+    height: auto; /* Allow the image to scale proportionally */
+    display: block; /* Ensure the image is displayed as a block element */
+    margin: 0 auto; /* Center the image horizontally within the container */
 }
 
 .zoom-button {
@@ -32,7 +35,7 @@
     color: black;
     cursor: pointer;
     border-radius: 0;
-    margin-right: 0; 
+    margin-right: 0;
 }
 
 .zoom-button:hover {
@@ -40,6 +43,5 @@
 }
 
 .map-main {
-    overflow: scroll;
     width: 75%;
 }
