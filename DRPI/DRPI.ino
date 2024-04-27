@@ -24,7 +24,7 @@ int moistureSensorPin = A1;
 int vibrationSensorPin = 7;
 
 int noRain = 1000;
-int lightRain = 850;
+int lightRain = 800;
 int mediumRain = 600;
 int heavyRain = 400;
 
