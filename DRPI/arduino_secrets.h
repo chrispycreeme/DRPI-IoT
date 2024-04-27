@@ -1,0 +1,2 @@
+#define SECRET_SSID "ASIAN VISION-3HkA"
+#define SECRET_PASS "HdP7NRs2"

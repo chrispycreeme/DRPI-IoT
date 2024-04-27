@@ -1,9 +1,21 @@
+
 #include "ArduinoGraphics.h"
 #include "Arduino_LED_Matrix.h"
 #include <Adafruit_BMP085.h>
 #include <SoftwareSerial.h>
+#include "WiFiS3.h"
+#include "webpage.h"
 
 ArduinoLEDMatrix matrix;
+
+#include "arduino_secrets.h"
+///////please enter your sensitive data in the Secret tab/arduino_secrets.h
+char ssid[] = SECRET_SSID;  // your network SSID (name)
+char pass[] = SECRET_PASS;  // your network password (use for WPA, or use as key for WEP)
+int keyIndex = 0;
+
+int status = WL_IDLE_STATUS;
+WiFiServer server(80);
 
 Adafruit_BMP085 bmp;
 SoftwareSerial BLEmod(13, 12);
@@ -47,8 +59,32 @@ void setup() {
   matrix.endText(SCROLL_LEFT);
 
   matrix.endDraw();
-}
 
+  if (WiFi.status() == WL_NO_MODULE) {
+    Serial.println("Communication with WiFi module failed!");
+    // don't continue
+    while (true)
+      ;
+  }
+
+  String fv = WiFi.firmwareVersion();
+  if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
+    Serial.println("Please upgrade the firmware");
+  }
+
+  // attempt to connect to WiFi network:
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to Network named: ");
+    Serial.println(ssid);  // print the network name (SSID);
+
+    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    status = WiFi.begin(ssid, pass);
+    // wait 10 seconds for connection:
+    delay(10000);
+  }
+  server.begin();     // start the web server on port 80
+  printWifiStatus();  // you're connected now, so print out the status
+}
 
 long vibration() {
   long measurement = pulseIn(vibrationSensorPin, HIGH);
@@ -56,7 +92,39 @@ long vibration() {
 }
 
 void loop() {
+  WiFiClient client = server.available();
 
+  if (client) {
+    // An HTTP request ends with a blank line
+    boolean currentLineIsBlank = true;
+    while (client.connected()) {
+      if (client.available()) {
+        char c = client.read();
+        // Check if this is the HTTP request
+        if (c == '\n' && currentLineIsBlank) {
+          // Send a standard HTTP response header
+          client.println("HTTP/1.1 200 OK");
+          client.println("Content-Type: text/html");
+          client.println("Connection: close");
+          client.println();
+          // Send the webpage content
+          client.print(webserver);
+          break;
+        }
+        if (c == '\n') {
+          // Start of a new line
+          currentLineIsBlank = true;
+        } else if (c != '\r') {
+          // Content received, line is not blank
+          currentLineIsBlank = false;
+        }
+      }
+    }
+    // Give the web browser time to receive the data
+    delay(1);
+    // Close the connection
+    client.stop();
+  }
 
   float temperatureRecord = bmp.readTemperature();
   float pressureRecord = bmp.readPressure();
@@ -101,9 +169,7 @@ void loop() {
     landslideError = 0;  // No error detected
   }
 
-
   //Rain Sensor Classification
-
   if (millis() - startTime >= 10000) {
     reportMostFrequentRainLevel();
     startTime = millis();                       // Reset start time
@@ -112,19 +178,15 @@ void loop() {
 
   if (sensorValue >= noRain) {
     Serial.println("No Rain Detected");
-    rainLevels[0]++;
     rainStatus = 1;
   } else if (sensorValue <= noRain && sensorValue >= lightRain) {
     Serial.println("Light Rain Detected");
-    rainLevels[1]++;
     rainStatus = 2;
   } else if (sensorValue <= lightRain && sensorValue >= mediumRain) {
     Serial.println("Medium Rain Detected");
-    rainLevels[2]++;
     rainStatus = 3;
   } else if (sensorValue <= mediumRain || sensorValue <= heavyRain) {
     Serial.println("Heavy Rain Detected");
-    rainLevels[3]++;
     rainStatus = 4;
   }
 
@@ -150,10 +212,6 @@ void loop() {
   Serial.println(" ms");
 
   BLEmod.print(rainStatus);
-  BLEmod.print(",");
-  BLEmod.print(landslideError);
-  BLEmod.print(",");
-  BLEmod.print(temperatureRecord);
   BLEmod.print(",");
   BLEmod.println(sensorValue);
   LCD();
@@ -214,4 +272,24 @@ void LCD() {
   matrix.endText(SCROLL_LEFT);
 
   matrix.endDraw();
+}
+
+void printWifiStatus() {
+  // print the SSID of the network you're attached to:
+  Serial.print("SSID: ");
+  Serial.println(WiFi.SSID());
+
+  // print your board's IP address:
+  IPAddress ip = WiFi.localIP();
+  Serial.print("IP Address: ");
+  Serial.println(ip);
+
+  // print the received signal strength:
+  long rssi = WiFi.RSSI();
+  Serial.print("signal strength (RSSI):");
+  Serial.print(rssi);
+  Serial.println(" dBm");
+  // print where to go in a browser:
+  Serial.print("To see this page in action, open a browser to http://");
+  Serial.println(ip);
 }
