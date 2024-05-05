@@ -1,4 +1,3 @@
-
 #include "ArduinoGraphics.h"
 #include "Arduino_LED_Matrix.h"
 #include <Adafruit_BMP085.h>
